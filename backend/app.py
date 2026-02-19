@@ -7,7 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Enable CORS for React
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,11 +15,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load artifacts
 model = joblib.load("backend/model.pkl")
 columns = joblib.load("backend/columns.pkl")
 
-# Remove Timestamp if present
 columns = [col for col in columns if col != "Timestamp"]
 
 class UserInput(BaseModel):
@@ -44,7 +41,6 @@ def predict(data: UserInput):
 
     prediction = model.predict(input_df)[0]
 
-    # confidence score
     if hasattr(model, "predict_proba"):
         probs = model.predict_proba(input_df)[0]
         score = float(max(probs) * 100)

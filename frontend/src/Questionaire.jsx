@@ -58,7 +58,11 @@ export default function Questionnaire() {
         setColumns(filtered);
 
         const initial = {};
-        filtered.forEach(col => initial[col] = 5);
+        filtered.forEach(col => {
+          if (col === "AGE") initial[col]="";
+          else if (col === "GENDER") initial[col] = 0;
+          else initial[col] = 0;
+        });
         setForm(initial);
       });
   }, []);
@@ -109,7 +113,7 @@ export default function Questionnaire() {
         p: 2
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="false">
 
         <Card
           sx={{
@@ -164,7 +168,7 @@ export default function Questionnaire() {
                       </Typography>
 
                       <Slider
-                        value={form[col] || 5}
+                        value={form[col] || 0}
                         step={1}
                         min={0}
                         max={10}
