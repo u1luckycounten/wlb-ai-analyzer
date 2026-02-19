@@ -1,3 +1,4 @@
+
 import joblib
 import numpy as np
 from fastapi import FastAPI
@@ -43,6 +44,13 @@ def predict(data: UserInput):
 
     prediction = model.predict(input_df)[0]
 
+    # confidence score
+    if hasattr(model, "predict_proba"):
+        probs = model.predict_proba(input_df)[0]
+        score = float(max(probs) * 100)
+    else:
+        score = float(prediction * 50)
+
     labels = {
         0: "Bad",
         1: "Average",
@@ -51,5 +59,6 @@ def predict(data: UserInput):
 
     return {
         "prediction": int(prediction),
-        "label": labels[prediction]
+        "label": labels[prediction],
+        "score": round(score, 2)
     }

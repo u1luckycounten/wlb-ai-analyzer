@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import {
@@ -44,6 +45,7 @@ export default function Questionnaire() {
   const [columns, setColumns] = useState([]);
   const [form, setForm] = useState({});
   const [result, setResult] = useState(null);
+  const [score, setScore] = useState(null);
 
   useEffect(() => {
     axios.get("http://127.0.0.1:8000/columns")
@@ -69,20 +71,32 @@ export default function Questionnaire() {
   };
 
   const handleSubmit = async () => {
-    const features = Object.values(form);
+  const features = Object.values(form);
 
-    const res = await axios.post("http://127.0.0.1:8000/predict", {
-      features: features
-    });
+  const res = await axios.post("http://127.0.0.1:8000/predict", {
+    features: features
+  });
 
-    setResult(res.data.label);
-  };
+  setResult(res.data.label);
+  setScore(res.data.score);   // 👈 VERY IMPORTANT
+};
 
   const getColor = () => {
-    if (result === "Bad") return "error";
-    if (result === "Average") return "warning";
-    return "success";
-  };
+  const category = getCategory();
+
+  if (category === "Bad") return "error";
+  if (category === "Average") return "warning";
+  if (category === "Good") return "success";
+  return "success";
+};
+  const getCategory = () => {
+  if (!score) return "";
+
+  if (score < 40) return "Bad";
+  if (score < 60) return "Average";
+  if (score < 80) return "Good";
+  return "Excellent";
+};
 
   return (
     <Box
@@ -183,15 +197,24 @@ export default function Questionnaire() {
 
             {result && (
               <Box sx={{ textAlign: "center", mt: 4 }}>
+
                 <Typography variant="h5">
                   Your Work Life Balance
                 </Typography>
 
+                <Typography
+                  variant="h3"
+                  sx={{ fontWeight: "bold", mt: 2 }}
+                >
+                  {score ? `${score}%` : "--"}
+                </Typography>
+
                 <Chip
-                  label={result}
+                  label={getCategory()}
                   color={getColor()}
-                  sx={{ fontSize: 20, px: 3, py: 2, mt: 2 }}
+                  sx={{ fontSize: 18, px: 3, py: 2, mt: 2 }}
                 />
+
               </Box>
             )}
 
