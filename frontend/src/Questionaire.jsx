@@ -1,6 +1,10 @@
-
+import { auth, db } from "./firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import History from "./History";
+import Graphs from "./Graphs";
+
 import {
   Container,
   Typography,
@@ -59,10 +63,11 @@ export default function Questionnaire() {
 
         const initial = {};
         filtered.forEach(col => {
-          if (col === "AGE") initial[col]="";
+          if (col === "AGE") initial[col] = "";
           else if (col === "GENDER") initial[col] = 0;
           else initial[col] = 0;
         });
+
         setForm(initial);
       });
   }, []);
@@ -75,32 +80,58 @@ export default function Questionnaire() {
   };
 
   const handleSubmit = async () => {
-  const features = Object.values(form);
 
-  const res = await axios.post("http://127.0.0.1:8000/predict", {
-    features: features
-  });
+    const features = Object.values(form);
 
-  setResult(res.data.label);
-  setScore(res.data.score);   // 👈 VERY IMPORTANT
-};
+    const res = await axios.post("http://127.0.0.1:8000/predict", {
+      features: features
+    });
+
+    const label = res.data.label;
+    const scoreValue = res.data.score;
+
+    setResult(label);
+    setScore(scoreValue);
+
+    // 🔥 SAVE TO FIREBASE
+    const user = auth.currentUser;
+
+    if (user) {
+      try {
+        await addDoc(collection(db, "analysis"), {
+          userId: user.uid,
+          inputs: form,
+          score: scoreValue,
+          label: label,
+          createdAt: serverTimestamp()
+        });
+
+        console.log("Saved to Firebase ✅");
+
+      } catch (error) {
+        console.error("Error saving:", error);
+      }
+    }
+
+  };
+
+  const getCategory = () => {
+    if (!score) return "";
+
+    if (score < 40) return "Bad";
+    if (score < 60) return "Average";
+    if (score < 80) return "Good";
+    return "Excellent";
+  };
 
   const getColor = () => {
-  const category = getCategory();
+    const category = getCategory();
 
-  if (category === "Bad") return "error";
-  if (category === "Average") return "warning";
-  if (category === "Good") return "success";
-  return "success";
-};
-  const getCategory = () => {
-  if (!score) return "";
-
-  if (score < 40) return "Bad";
-  if (score < 60) return "Average";
-  if (score < 80) return "Good";
-  return "Excellent";
-};
+    if (category === "Bad") return "error";
+    if (category === "Average") return "warning";
+    if (category === "Good") return "success";
+    return "success";
+  };
 
   return (
     <Box
@@ -113,14 +144,9 @@ export default function Questionnaire() {
         p: 2
       }}
     >
-      <Container maxWidth="false">
+      <Container maxWidth={false}>
 
-        <Card
-          sx={{
-            borderRadius: 4,
-            boxShadow: 6
-          }}
-        >
+        <Card sx={{ borderRadius: 4, boxShadow: 6 }}>
           <CardContent>
 
             <Typography
@@ -157,6 +183,7 @@ export default function Questionnaire() {
                       label="Age"
                       type="number"
                       value={form[col]}
+                      placeholder="Enter your age"
                       onChange={(e) => handleChange(col, e.target.value)}
                     />
 
@@ -168,7 +195,7 @@ export default function Questionnaire() {
                       </Typography>
 
                       <Slider
-                        value={form[col] || 0}
+                        value={form[col] ?? 0}
                         step={1}
                         min={0}
                         max={10}
@@ -221,6 +248,10 @@ export default function Questionnaire() {
 
               </Box>
             )}
+
+            {/* 🔥 HISTORY SECTION */}
+            {result && <History />}
+            {result && <Graphs />}
 
           </CardContent>
         </Card>

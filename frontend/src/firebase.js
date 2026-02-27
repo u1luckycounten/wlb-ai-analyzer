@@ -1,6 +1,11 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import {
+  getAuth,
+  setPersistence,
+  browserSessionPersistence
+} from "firebase/auth";
 
+import { getFirestore } from "firebase/firestore";
 const firebaseConfig = {
   apiKey: "AIzaSyAxe1tG4hLXOfiQdLBsEcx66k4jKe_7-VA",
   authDomain: "work-life-balance-analyser.firebaseapp.com",
@@ -11,3 +16,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
+export const db = getFirestore(app);
+
+// 🔥 SESSION ONLY (logout when tab closes)
+setPersistence(auth, browserSessionPersistence);

@@ -19,30 +19,48 @@ import {
 
 export default function Login() {
 
+  const allowedDomains = ["rajagiri.edu.in", "rajagiri.edu.in"];
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const signUp = async () => {
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      alert("Account created!");
-    } catch (err) {
-      alert(err.message);
-    }
-  };
+
+  if (!isAllowedEmail(email)) {
+    alert("Please use your organization email");
+    return;
+  }
+
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    alert("Account created!");
+  } catch (err) {
+    alert(err.message);
+  }
+};
 
   const signIn = async () => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (err) {
-      alert(err.message);
-    }
-  };
+
+  if (!isAllowedEmail(email)) {
+    alert("Only organization emails allowed");
+    return;
+  }
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    alert(err.message);
+  }
+};
 
   const googleLogin = async () => {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
   };
+
+  const isAllowedEmail = (email) => {
+  const domain = email.split("@")[1];
+  return allowedDomains.includes(domain);
+};
 
   return (
     <Box

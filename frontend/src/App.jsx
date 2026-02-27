@@ -2,13 +2,23 @@ import { useEffect, useState } from "react";
 import { auth } from "./firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 
-import Questionnaire from "./Questionaire.jsx";
-import Login from "./Login.jsx";
+import ModernQuestionnaire from "./ModernQuestionnaire";
+import Dashboard from "./Dashboard";
+import Login from "./Login";
+
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box
+} from "@mui/material";
 
 function App() {
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState("questions");
 
   useEffect(() => {
 
@@ -26,15 +36,43 @@ function App() {
   if (!user) return <Login />;
 
   return (
-    <div>
+    <Box>
 
-      <button onClick={() => signOut(auth)}>
-        Logout
-      </button>
+      {/* Header */}
+      <AppBar position="static" sx={{ background: "#6366f1" }}>
+        <Toolbar>
 
-      <Questionnaire />
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            Work Life Balance AI
+          </Typography>
 
-    </div>
+          <Typography sx={{ mr: 2 }}>
+            {user.displayName || user.email}
+          </Typography>
+
+          <Button color="inherit" onClick={() => signOut(auth)}>
+            Logout
+          </Button>
+
+        </Toolbar>
+      </AppBar>
+
+      {/* Main Content */}
+      <Box sx={{ p: 3 }}>
+
+        {page === "questions" && (
+          <ModernQuestionnaire
+            onComplete={() => setPage("dashboard")}
+          />
+        )}
+
+        {page === "dashboard" && (
+          <Dashboard />
+        )}
+
+      </Box>
+
+    </Box>
   );
 }
 
